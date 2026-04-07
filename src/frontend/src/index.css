@@ -1,0 +1,793 @@
+@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "GeistMono";
+  src: url("/assets/fonts/GeistMono.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    /* HUD CSS variables - overridden by faction */
+    --hud-primary: #ff8c00;
+    --hud-bg: #000000;
+    --hud-accent: #ffa500;
+    --hud-text: #ffffff;
+    --hud-dim: #c86510;
+    --hud-size: 100;
+    --hud-brightness: 100;
+
+    /* OKLCH design tokens - HEV amber-black theme */
+    --radius: 0.375rem;
+    --background: 0.06 0.005 60;
+    --foreground: 0.97 0.02 80;
+    --card: 0.08 0.01 55;
+    --card-foreground: 0.97 0.02 80;
+    --popover: 0.07 0.008 55;
+    --popover-foreground: 0.97 0.02 80;
+    --primary: 0.65 0.18 50;
+    --primary-foreground: 0.06 0.005 60;
+    --secondary: 0.12 0.015 55;
+    --secondary-foreground: 0.97 0.02 80;
+    --muted: 0.1 0.008 55;
+    --muted-foreground: 0.5 0.04 60;
+    --accent: 0.68 0.2 60;
+    --accent-foreground: 0.06 0.005 60;
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.97 0 0;
+    --border: 0.65 0.18 50;
+    --input: 0.12 0.015 55;
+    --ring: 0.65 0.18 50;
+    --chart-1: 0.65 0.18 50;
+    --chart-2: 0.55 0.15 145;
+    --chart-3: 0.5 0.18 25;
+    --chart-4: 0.6 0.2 80;
+    --chart-5: 0.45 0.22 15;
+    --sidebar: 0.07 0.008 55;
+    --sidebar-foreground: 0.97 0.02 80;
+    --sidebar-primary: 0.65 0.18 50;
+    --sidebar-primary-foreground: 0.06 0.005 60;
+    --sidebar-accent: 0.12 0.015 55;
+    --sidebar-accent-foreground: 0.97 0.02 80;
+    --sidebar-border: 0.65 0.18 50;
+    --sidebar-ring: 0.65 0.18 50;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    height: 100%;
+    overflow: hidden;
+    color-scheme: dark;
+  }
+
+  body {
+    font-family: "Share Tech Mono", "GeistMono", "Courier New", monospace;
+    background: var(--hud-bg);
+    color: var(--hud-text);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    @apply bg-background text-foreground;
+  }
+
+  #root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+/* ============================================================
+   CRT OVERLAY - scanlines
+   ============================================================ */
+.crt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.18) 2px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
+  animation: scanline-scroll 10s linear infinite;
+  will-change: background-position;
+}
+
+/* ============================================================
+   VIGNETTE
+   ============================================================ */
+.vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
+}
+
+/* ============================================================
+   HUD PANELS
+   ============================================================ */
+.hud-panel {
+  border: 1px solid var(--hud-primary);
+  border-radius: 6px;
+  background: rgba(14, 10, 4, 0.92);
+  padding: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-panel.glow {
+  box-shadow: 0 0 6px var(--hud-primary), 0 0 12px rgba(255, 140, 0, 0.15),
+    inset 0 0 6px rgba(255, 140, 0, 0.04);
+}
+
+.hud-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--hud-primary),
+    transparent
+  );
+  opacity: 0.6;
+}
+
+/* Corner notch decorations */
+.hud-panel::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid var(--hud-primary);
+  border-right: 1px solid var(--hud-primary);
+  opacity: 0.5;
+}
+
+/* ============================================================
+   HUD LABEL STYLE
+   ============================================================ */
+.hud-label {
+  font-size: 9px;
+  font-family: "Share Tech Mono", monospace;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--hud-dim);
+  line-height: 1.2;
+}
+
+.hud-value {
+  font-size: 26px;
+  font-family: "Share Tech Mono", monospace;
+  font-weight: 700;
+  color: var(--hud-primary);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px var(--hud-primary);
+}
+
+.hud-value-sm {
+  font-size: 18px;
+  font-family: "Share Tech Mono", monospace;
+  font-weight: 700;
+  color: var(--hud-primary);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   SEGMENTED BAR
+   ============================================================ */
+.seg-bar {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  align-items: center;
+}
+
+.seg-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 140, 0, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 140, 0, 0.2);
+}
+
+.seg-bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.4s ease, background-color 0.4s ease;
+  position: relative;
+}
+
+.seg-bar-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+}
+
+/* ============================================================
+   HUD BUTTON
+   ============================================================ */
+.hud-btn {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--hud-primary);
+  background: rgba(255, 140, 0, 0.08);
+  color: var(--hud-primary);
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hud-btn:hover,
+.hud-btn:active {
+  background: rgba(255, 140, 0, 0.2);
+  box-shadow: 0 0 6px var(--hud-primary);
+}
+
+.hud-btn-sm {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 140, 0, 0.5);
+  background: rgba(255, 140, 0, 0.05);
+  color: var(--hud-accent);
+  border-radius: 2px;
+  padding: 2px 6px;
+  cursor: pointer;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+
+.hud-btn-sm:active {
+  background: rgba(255, 140, 0, 0.15);
+}
+
+/* ============================================================
+   BOOT SEQUENCE STYLES
+   ============================================================ */
+.boot-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  font-family: "Share Tech Mono", monospace;
+}
+
+.lambda-glyph {
+  font-size: 80px;
+  color: var(--hud-primary);
+  text-shadow: 0 0 20px var(--hud-primary), 0 0 40px rgba(255, 140, 0, 0.5), 0 0
+    80px rgba(255, 140, 0, 0.2);
+  font-family: "Share Tech Mono", monospace;
+  line-height: 1;
+}
+
+.crt-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+  transform: translateY(-50%);
+}
+
+.terminal-text {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 11px;
+  color: var(--hud-primary);
+  line-height: 1.8;
+  text-align: left;
+  letter-spacing: 0.05em;
+}
+
+.terminal-line {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ============================================================
+   SETUP WIZARD
+   ============================================================ */
+.wizard-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9000;
+  font-family: "Share Tech Mono", monospace;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wizard-card {
+  border: 1px solid var(--hud-primary);
+  border-radius: 6px;
+  background: rgba(14, 10, 4, 0.95);
+  padding: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.wizard-card.selected {
+  border-color: var(--hud-primary);
+  box-shadow: 0 0 10px var(--hud-primary), inset 0 0 6px rgba(255, 140, 0, 0.08);
+}
+
+.wizard-card:not(.selected) {
+  border-color: rgba(255, 140, 0, 0.3);
+}
+
+/* ============================================================
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+@keyframes scanline-scroll {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 100px;
+  }
+}
+
+@keyframes pulse-danger {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 6px var(--hud-primary);
+  }
+  50% {
+    box-shadow: 0 0 16px var(--hud-primary), 0 0 30px rgba(255, 140, 0, 0.3);
+  }
+}
+
+@keyframes damage-flash {
+  0% {
+    background-color: rgba(255, 30, 30, 0.5);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes glitch {
+  0% {
+    transform: translateX(0);
+    clip-path: none;
+  }
+  10% {
+    transform: translateX(-3px);
+    clip-path: polygon(0 15%, 100% 15%, 100% 35%, 0 35%);
+  }
+  20% {
+    transform: translateX(3px);
+    clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
+  }
+  30% {
+    transform: translateX(0);
+    clip-path: none;
+  }
+  100% {
+    transform: translateX(0);
+    clip-path: none;
+  }
+}
+
+@keyframes lambda-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0);
+    filter: blur(0);
+  }
+}
+
+@keyframes crt-expand {
+  0% {
+    transform: translateY(-50%) scaleY(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-50%) scaleY(40);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-50%) scaleY(600);
+    opacity: 0;
+  }
+}
+
+@keyframes flicker {
+  0%,
+  19%,
+  21%,
+  23%,
+  25%,
+  54%,
+  56%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  24%,
+  55% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes static-noise {
+  0% {
+    background-position: 0 0;
+  }
+  10% {
+    background-position: -5% -10%;
+  }
+  20% {
+    background-position: -15% 5%;
+  }
+  30% {
+    background-position: 7% -25%;
+  }
+  40% {
+    background-position: 20% 25%;
+  }
+  50% {
+    background-position: -25% 10%;
+  }
+  60% {
+    background-position: 15% 5%;
+  }
+  70% {
+    background-position: 0% 15%;
+  }
+  80% {
+    background-position: 25% 35%;
+  }
+  90% {
+    background-position: -10% 10%;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hazard-flash {
+  0%,
+  100% {
+    opacity: 1;
+    border-color: var(--hud-primary);
+  }
+  50% {
+    opacity: 0.5;
+    border-color: #ff3300;
+  }
+}
+
+@keyframes charging-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes ammo-flash {
+  0%,
+  100% {
+    color: #ff3300;
+    text-shadow: 0 0 8px #ff3300;
+  }
+  50% {
+    color: var(--hud-primary);
+    text-shadow: 0 0 8px var(--hud-primary);
+  }
+}
+
+/* Animated utility classes */
+.animate-lambda-appear {
+  animation: lambda-appear 1.2s ease-out forwards;
+}
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+.animate-flicker {
+  animation: flicker 0.8s ease-in-out;
+}
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+.animate-pulse-danger {
+  animation: pulse-danger 0.8s ease-in-out infinite;
+}
+.animate-glitch {
+  animation: glitch 0.4s steps(1) forwards;
+}
+.animate-charging {
+  animation: charging-pulse 1.5s ease-in-out infinite;
+}
+.animate-ammo-warn {
+  animation: ammo-flash 0.6s ease-in-out infinite;
+}
+.animate-hazard-alert {
+  animation: hazard-flash 0.7s ease-in-out infinite;
+}
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 140, 0, 0.4);
+  border-radius: 2px;
+}
+
+/* ============================================================
+   TOGGLE SWITCH OVERRIDE
+   ============================================================ */
+.hud-switch [data-state="checked"] {
+  background: var(--hud-primary) !important;
+}
+
+/* ============================================================
+   INPUT OVERRIDE FOR HUD
+   ============================================================ */
+.hud-input {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 140, 0, 0.5);
+  color: var(--hud-primary);
+  border-radius: 4px;
+  padding: 6px 10px;
+  outline: none;
+  width: 100%;
+  caret-color: var(--hud-primary);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.hud-input:focus {
+  border-color: var(--hud-primary);
+  box-shadow: 0 0 6px rgba(255, 140, 0, 0.4);
+}
+
+.hud-input::placeholder {
+  color: rgba(255, 140, 0, 0.35);
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   SLIDER OVERRIDE
+   ============================================================ */
+.hud-slider input[type="range"] {
+  accent-color: var(--hud-primary);
+}
+
+/* ============================================================
+   PHASE 2 ANIMATIONS
+   ============================================================ */
+@keyframes screen-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate(-3px, -2px) rotate(-0.5deg);
+  }
+  20% {
+    transform: translate(3px, 2px) rotate(0.5deg);
+  }
+  30% {
+    transform: translate(-3px, 2px) rotate(0deg);
+  }
+  40% {
+    transform: translate(3px, -2px) rotate(0.5deg);
+  }
+  50% {
+    transform: translate(-2px, 3px) rotate(-0.5deg);
+  }
+  60% {
+    transform: translate(2px, -3px) rotate(0deg);
+  }
+  70% {
+    transform: translate(-3px, 2px) rotate(-0.5deg);
+  }
+  80% {
+    transform: translate(3px, 3px) rotate(0.5deg);
+  }
+  90% {
+    transform: translate(-2px, -2px) rotate(0deg);
+  }
+}
+
+@keyframes hud-border-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0px rgba(255, 0, 0, 0);
+    opacity: 0.6;
+  }
+  50% {
+    box-shadow: inset 0 0 30px rgba(255, 0, 0, 0.5), 0 0 20px
+      rgba(255, 0, 0, 0.3);
+    opacity: 1;
+  }
+}
+
+@keyframes panic-overlay {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Equalizer bars for music player */
+@keyframes eq-bar-0 {
+  from {
+    height: 4px;
+  }
+  to {
+    height: 10px;
+  }
+}
+@keyframes eq-bar-1 {
+  from {
+    height: 6px;
+  }
+  to {
+    height: 14px;
+  }
+}
+@keyframes eq-bar-2 {
+  from {
+    height: 3px;
+  }
+  to {
+    height: 12px;
+  }
+}
+@keyframes eq-bar-3 {
+  from {
+    height: 5px;
+  }
+  to {
+    height: 9px;
+  }
+}
